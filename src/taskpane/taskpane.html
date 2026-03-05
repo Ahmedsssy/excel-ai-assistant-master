@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Excel AI Assistant</title>
+
+    <!-- Office.js -->
+    <script
+      type="text/javascript"
+      src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"
+    ></script>
+
+    <link rel="stylesheet" href="taskpane.css" />
+  </head>
+  <body class="dark-theme">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-title">
+        <span class="header-icon">🤖</span>
+        <span>Excel AI Assistant</span>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="settingsBtn" title="Settings">⚙️</button>
+        <button class="icon-btn" id="clearChatBtn" title="Clear chat">🗑️</button>
+      </div>
+    </header>
+
+    <!-- Tab navigation -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="chat">💬 Chat</button>
+      <button class="tab-btn" data-tab="analyze">📊 Analyze</button>
+      <button class="tab-btn" data-tab="charts">📈 Charts</button>
+      <button class="tab-btn" data-tab="detect">🔍 Detect</button>
+    </nav>
+
+    <!-- ==================== CHAT TAB ==================== -->
+    <div id="tab-chat" class="tab-content active">
+      <div class="chat-container">
+        <!-- Model status bar -->
+        <div class="status-bar">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">Connecting to AI…</span>
+          <span class="model-badge" id="modelBadge">—</span>
+        </div>
+
+        <!-- Messages area -->
+        <div class="messages" id="messages">
+          <div class="message assistant-msg">
+            <div class="msg-avatar">🤖</div>
+            <div class="msg-bubble">
+              <p>Hello! I'm your Excel AI Assistant powered by a local LLM (LM Studio / Ollama). Your data never leaves your machine.</p>
+              <p>You can ask me to analyse your data, create charts, detect anomalies or answer any Excel-related question.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input toolbar -->
+        <div class="input-toolbar">
+          <!-- Context toggle -->
+          <label class="toggle-label" title="Include selected Excel range as context">
+            <input type="checkbox" id="includeDataToggle" checked />
+            <span class="toggle-text">📋 Include data</span>
+          </label>
+
+          <!-- Media buttons -->
+          <button class="icon-btn" id="voiceBtn" title="Voice input">🎤</button>
+          <button class="icon-btn" id="videoBtn" title="Video capture">📷</button>
+          <button class="icon-btn" id="fileBtn" title="Attach file">📎</button>
+          <input type="file" id="fileInput" style="display:none" accept=".csv,.xlsx,.txt,.json" />
+        </div>
+
+        <!-- Text input row -->
+        <div class="input-row">
+          <textarea
+            id="chatInput"
+            class="chat-input"
+            rows="2"
+            placeholder="Ask me anything about your data…"
+          ></textarea>
+          <button class="send-btn" id="sendBtn" title="Send (Ctrl+Enter)">➤</button>
+        </div>
+
+        <!-- Audio recording indicator -->
+        <div class="recording-indicator hidden" id="recordingIndicator">
+          <span class="rec-dot"></span> Recording… click 🎤 again to stop
+        </div>
+
+        <!-- Video preview -->
+        <div class="video-section hidden" id="videoSection">
+          <video id="videoPreview" autoplay playsinline muted></video>
+          <button class="icon-btn capture-btn" id="captureBtn">📸 Capture</button>
+          <button class="icon-btn" id="stopVideoBtn">✖ Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== ANALYZE TAB ==================== -->
+    <div id="tab-analyze" class="tab-content">
+      <div class="panel">
+        <h3 class="panel-title">📊 Data Analysis</h3>
+        <button class="btn primary" id="analyzeSelectionBtn">Analyse Selection</button>
+        <button class="btn secondary" id="analyzeSheetBtn">Analyse Entire Sheet</button>
+
+        <div id="analysisOutput" class="output-box hidden"></div>
+      </div>
+    </div>
+
+    <!-- ==================== CHARTS TAB ==================== -->
+    <div id="tab-charts" class="tab-content">
+      <div class="panel">
+        <h3 class="panel-title">📈 Smart Charts</h3>
+        <p class="hint">Select a data range then click a chart type. The assistant will pick the best chart automatically.</p>
+        <button class="btn primary" id="autoChartBtn">✨ Auto Chart</button>
+        <div class="chart-grid">
+          <button class="chart-type-btn" data-type="ColumnClustered">📊 Column</button>
+          <button class="chart-type-btn" data-type="Line">📈 Line</button>
+          <button class="chart-type-btn" data-type="Pie">🥧 Pie</button>
+          <button class="chart-type-btn" data-type="BarClustered">📉 Bar</button>
+          <button class="chart-type-btn" data-type="Area">⛰️ Area</button>
+          <button class="chart-type-btn" data-type="Scatter">🔵 Scatter</button>
+          <button class="chart-type-btn" data-type="Histogram">📏 Histogram</button>
+          <button class="chart-type-btn" data-type="BoxWhisker">📦 Box Plot</button>
+        </div>
+        <div id="chartOutput" class="output-box hidden"></div>
+      </div>
+    </div>
+
+    <!-- ==================== DETECT TAB ==================== -->
+    <div id="tab-detect" class="tab-content">
+      <div class="panel">
+        <h3 class="panel-title">🔍 Anomaly &amp; Trend Detection</h3>
+        <button class="btn primary" id="detectAnomaliesBtn">Detect Anomalies</button>
+        <button class="btn secondary" id="detectTrendsBtn">Detect Trends</button>
+        <button class="btn secondary" id="highlightAnomaliesBtn">Highlight Anomalies</button>
+        <div id="detectionOutput" class="output-box hidden"></div>
+      </div>
+    </div>
+
+    <!-- ==================== SETTINGS MODAL ==================== -->
+    <div class="modal-overlay hidden" id="settingsModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>⚙️ Settings</h3>
+          <button class="icon-btn" id="closeSettings">✖</button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label">AI Backend URL</label>
+          <input
+            type="text"
+            id="aiBackendUrl"
+            class="form-input"
+            placeholder="http://localhost:1234/v1"
+          />
+          <small class="hint">LM Studio default: http://localhost:1234/v1<br>Ollama default: http://localhost:11434/v1</small>
+
+          <label class="form-label mt">Model name</label>
+          <input
+            type="text"
+            id="aiModelName"
+            class="form-input"
+            placeholder="auto-detect"
+          />
+
+          <label class="form-label mt">Python backend URL (optional)</label>
+          <input
+            type="text"
+            id="pyBackendUrl"
+            class="form-input"
+            placeholder="http://localhost:8000"
+          />
+
+          <label class="form-label mt">Max tokens</label>
+          <input
+            type="number"
+            id="maxTokens"
+            class="form-input"
+            value="2048"
+            min="128"
+            max="8192"
+          />
+
+          <label class="form-label mt">Temperature</label>
+          <input
+            type="range"
+            id="temperature"
+            min="0"
+            max="2"
+            step="0.1"
+            value="0.7"
+          />
+          <span id="tempDisplay">0.7</span>
+        </div>
+        <div class="modal-footer">
+          <button class="btn primary" id="saveSettings">Save</button>
+          <button class="btn secondary" id="testConnection">Test Connection</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../../node_modules/chart.js/dist/chart.umd.js" onerror="console.warn('chart.js not bundled')"></script>
+    <script type="module" src="taskpane.js"></script>
+  </body>
+</html>
