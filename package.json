@@ -1,0 +1,29 @@
+{
+  "name": "excel-ai-assistant",
+  "version": "2.0.0",
+  "description": "Excel AI Assistant - Local AI-powered Excel assistant tool with LM Studio integration",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server -p 3000 -c-1 --cors",
+    "dev": "http-server -p 3000 -c-1 --cors -o",
+    "build": "echo 'Build completed'",
+    "test": "echo 'No tests specified'",
+    "update-ip": "node update_ip.js",
+    "start-auto": "./start.sh"
+  },
+  "keywords": [
+    "excel",
+    "add-in",
+    "office",
+    "javascript"
+  ],
+  "author": "Excel AI Assistant Team",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
